@@ -1047,7 +1047,7 @@ bool CGUIMediaWindow::OnClick(int iItem, const std::string &player)
     }
   }
 
-  if (pItem->m_bIsFolder)
+  if (pItem->m_bIsFolder && pItem->GetOpticalMediaPath().empty())
   {
     if ( pItem->m_bIsShareOrDrive )
     {
