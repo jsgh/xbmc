@@ -874,6 +874,14 @@ bool CVideoPlayer::OpenDemuxStream()
     return false;
   }
 
+  if (m_pInputStream->IsStreamType(DVDSTREAM_TYPE_DVD) &&
+      m_playerOptions.starttitle > 0)
+  {
+    CLog::Log(LOGNOTICE, "Jumping to title %d", m_playerOptions.starttitle);
+    m_pDemuxer->SeekTitle(m_playerOptions.starttitle);
+    m_playerOptions.starttitle = -1;
+  }
+
   m_SelectionStreams.Clear(STREAM_NONE, STREAM_SOURCE_DEMUX);
   m_SelectionStreams.Clear(STREAM_NONE, STREAM_SOURCE_NAV);
   m_SelectionStreams.Update(m_pInputStream, m_pDemuxer);
@@ -4547,6 +4555,12 @@ int CVideoPlayer::GetChapter()
   return m_State.chapter;
 }
 
+int CVideoPlayer::GetTitle()
+{
+  CSingleLock lock(m_StateSection);
+  return m_State.title;
+}
+
 void CVideoPlayer::GetChapterName(std::string& strChapterName, int chapterIdx)
 {
   CSingleLock lock(m_StateSection);
@@ -4697,6 +4711,8 @@ void CVideoPlayer::UpdatePlayState(double timeout)
 
   if (m_pDemuxer)
   {
+    state.title = m_pDemuxer->GetTitle();
+
     if (IsInMenuInternal())
       state.chapter = 0;
     else
