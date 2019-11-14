@@ -394,7 +394,15 @@ bool CFileItemHandler::FillFileItemList(const CVariant &parameterObject, CFileIt
   CFileOperations::FillFileItemList(parameterObject, list);
 
   std::string file = parameterObject["file"].asString();
-  if (!file.empty() && (URIUtils::IsURL(file) || (CFile::Exists(file) && !CDirectory::Exists(file))))
+  bool bFileExists = CFile::Exists(file);
+  bool bIsDir = bFileExists && CDirectory::Exists(file);
+  std::string mediapath;
+  if (bIsDir) {
+    CFileItem item(file, true);
+    mediapath = item.GetOpticalMediaPath();
+    bIsDir = false;
+  }
+  if (!file.empty() && (URIUtils::IsURL(file) || (bFileExists && !bIsDir)))
   {
     bool added = false;
     for (int index = 0; index < list.Size(); index++)
@@ -410,6 +418,10 @@ bool CFileItemHandler::FillFileItemList(const CVariant &parameterObject, CFileIt
     if (!added)
     {
       CFileItemPtr item = CFileItemPtr(new CFileItem(file, false));
+      if (!mediapath.empty()) {
+        item->SetLabel(CUtil::GetTitleFromPath(file, true));
+        item->SetPath(mediapath);
+      }
       if (parameterObject.isMember("title"))
       {
         item->SetStartTitle(parameterObject["title"].asInteger());
