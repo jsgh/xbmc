@@ -152,6 +152,7 @@ public:
   int64_t demuxerId; // demuxer's id of current playing stream
   int id;     // id of current playing stream
   int source;
+  int dvdNavId;
   double dts;    // last dts from demuxer, used to find discontinuities
   double dur;    // last frame expected duration
   int dispTime; // display time from input stream
@@ -189,6 +190,7 @@ public:
   {
     id = -1;
     demuxerId = -1;
+    dvdNavId = -1;
     source = STREAM_SOURCE_NONE;
     dts = DVD_NOPTS_VALUE;
     dur = DVD_NOPTS_VALUE;
