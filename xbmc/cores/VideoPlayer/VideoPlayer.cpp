@@ -2770,6 +2770,7 @@ void CVideoPlayer::HandleMessages()
           {
             m_dvd.iSelectedAudioStream = -1;
             CloseStream(m_CurrentAudio, false);
+            m_CurrentAudio.dvdNavId = st.id;
             CDVDMsgPlayerSeek::CMode mode;
             mode.time = (int)GetUpdatedTime();
             mode.backward = true;
@@ -2777,6 +2778,7 @@ void CVideoPlayer::HandleMessages()
             mode.trickplay = true;
             mode.sync = true;
             m_messenger.Put(new CDVDMsgPlayerSeek(mode));
+            UpdateContentState();
           }
         }
         else
@@ -2846,6 +2848,8 @@ void CVideoPlayer::HandleMessages()
           {
             m_dvd.iSelectedSPUStream = -1;
             CloseStream(m_CurrentSubtitle, false);
+            m_CurrentSubtitle.dvdNavId = st.id;
+            UpdateContentState();
           }
         }
         else
@@ -3401,8 +3405,10 @@ void CVideoPlayer::SetSubtitleVisibleInternal(bool bVisible)
 {
   m_VideoPlayerVideo->EnableSubtitle(bVisible);
 
-  if (m_pInputStream && m_pInputStream->IsStreamType(DVDSTREAM_TYPE_DVD))
+  if (m_pInputStream && m_pInputStream->IsStreamType(DVDSTREAM_TYPE_DVD)) {
     std::static_pointer_cast<CDVDInputStreamNavigator>(m_pInputStream)->EnableSubtitleStream(bVisible);
+    UpdateContentState();
+  }
 }
 
 std::shared_ptr<TextCacheStruct_t> CVideoPlayer::GetTeletextCache()
@@ -3648,6 +3654,8 @@ bool CVideoPlayer::OpenStream(CCurrentStream& current, int64_t demuxerId, int iS
     current.id = iStream;
     current.demuxerId = demuxerId;
     current.source = source;
+    if (STREAM_SOURCE_MASK(source) == STREAM_SOURCE_NAV)
+      current.dvdNavId = iStream;
     current.hint = hint;
     current.stream = (void*)stream;
     current.lastdts = DVD_NOPTS_VALUE;
@@ -3843,6 +3851,7 @@ void CVideoPlayer::AdaptForcedSubtitles()
     }
     if (!found)
     {
+      m_CurrentSubtitle.dvdNavId = -1;
       SetSubtitleVisibleInternal(false);
     }
   }
@@ -4156,6 +4165,14 @@ int CVideoPlayer::OnDiscNavResult(void* pData, int iMessage)
         else
           m_dvd.iSelectedSPUStream = -1;
 
+        if (m_pInputStream && m_pInputStream->IsStreamType(DVDSTREAM_TYPE_DVD)) {
+          std::shared_ptr<CDVDInputStreamNavigator> pStream = std::static_pointer_cast<CDVDInputStreamNavigator>(m_pInputStream);
+          int iLogical = pStream->GetActiveSubtitleStream();
+          if (iLogical>=0) {
+            m_CurrentSubtitle.dvdNavId = iLogical;
+          }
+        }
+
         m_CurrentSubtitle.stream = NULL;
       }
       break;
@@ -4166,10 +4183,12 @@ int CVideoPlayer::OnDiscNavResult(void* pData, int iMessage)
         dvdnav_audio_stream_change_event_t* event = static_cast<dvdnav_audio_stream_change_event_t*>(pData);
 
         // Tell system what audiostream should be opened by default
-        if (event->logical >= 0)
+        if (event->logical >= 0) {
           m_dvd.iSelectedAudioStream = event->physical;
-        else
+          m_CurrentAudio.dvdNavId = event->logical;
+        } else {
           m_dvd.iSelectedAudioStream = -1;
+        }
 
         m_CurrentAudio.stream = NULL;
       }
@@ -5083,10 +5102,16 @@ void CVideoPlayer::UpdateContentState()
   CSingleLock lock(m_content.m_section);
   m_content.m_videoIndex = m_SelectionStreams.TypeIndexOf(STREAM_VIDEO, m_CurrentVideo.source,
                                                       m_CurrentVideo.demuxerId, m_CurrentVideo.id);
-  m_content.m_audioIndex = m_SelectionStreams.TypeIndexOf(STREAM_AUDIO, m_CurrentAudio.source,
-                                                      m_CurrentAudio.demuxerId, m_CurrentAudio.id);
-  m_content.m_subtitleIndex = m_SelectionStreams.TypeIndexOf(STREAM_SUBTITLE, m_CurrentSubtitle.source,
-                                                         m_CurrentSubtitle.demuxerId, m_CurrentSubtitle.id);
+  if (m_pInputStream && m_pInputStream->IsStreamType(DVDSTREAM_TYPE_DVD)) {
+    std::shared_ptr<CDVDInputStreamNavigator> pStream = std::static_pointer_cast<CDVDInputStreamNavigator>(m_pInputStream);
+    m_content.m_audioIndex = m_CurrentAudio.dvdNavId;
+    m_content.m_subtitleIndex = m_CurrentSubtitle.dvdNavId;
+  } else {
+    m_content.m_audioIndex = m_SelectionStreams.TypeIndexOf(STREAM_AUDIO, m_CurrentAudio.source,
+                                                            m_CurrentAudio.demuxerId, m_CurrentAudio.id);
+    m_content.m_subtitleIndex = m_SelectionStreams.TypeIndexOf(STREAM_SUBTITLE, m_CurrentSubtitle.source,
+                                                               m_CurrentSubtitle.demuxerId, m_CurrentSubtitle.id);
+  }
 }
 
 void CVideoPlayer::GetVideoStreamInfo(int streamId, VideoStreamInfo &info)
