@@ -926,22 +926,37 @@ void CDVDInputStreamNavigator::SetSubtitleStreamName(SubtitleStreamInfo &info, c
     switch (subp_attributes.code_extension)
     {
     case DVD_SUBPICTURE_LANG_EXT_NotSpecified:
-    case DVD_SUBPICTURE_LANG_EXT_ChildrensCaptions:
       break;
-
     case DVD_SUBPICTURE_LANG_EXT_NormalCaptions:
-    case DVD_SUBPICTURE_LANG_EXT_NormalCC:
-    case DVD_SUBPICTURE_LANG_EXT_BigCaptions:
-    case DVD_SUBPICTURE_LANG_EXT_BigCC:
-    case DVD_SUBPICTURE_LANG_EXT_ChildrensCC:
       info.flags = StreamFlags::FLAG_HEARING_IMPAIRED;
+      break;
+    case DVD_SUBPICTURE_LANG_EXT_BigCaptions:
+      info.flags = StreamFlags::FLAG_LARGE;
+      break;
+    case DVD_SUBPICTURE_LANG_EXT_ChildrensCaptions:
+      info.flags = StreamFlags::FLAG_CHILDRENS;
+      break;
+    case DVD_SUBPICTURE_LANG_EXT_NormalCC:
+      info.flags = StreamFlags::FLAG_CLOSED_CAPTIONS;
+      break;
+    case DVD_SUBPICTURE_LANG_EXT_BigCC:
+      info.flags = (StreamFlags)(StreamFlags::FLAG_LARGE|StreamFlags::FLAG_CLOSED_CAPTIONS);
+      break;
+    case DVD_SUBPICTURE_LANG_EXT_ChildrensCC:
+      info.flags = (StreamFlags)(StreamFlags::FLAG_CHILDRENS|StreamFlags::FLAG_CLOSED_CAPTIONS);
       break;
     case DVD_SUBPICTURE_LANG_EXT_Forced:
       info.flags = StreamFlags::FLAG_FORCED;
       break;
     case DVD_SUBPICTURE_LANG_EXT_NormalDirectorsComments:
+      info.name = g_localizeStrings.Get(37001);
+      break;
     case DVD_SUBPICTURE_LANG_EXT_BigDirectorsComments:
+      info.flags = StreamFlags::FLAG_LARGE;
+      info.name = g_localizeStrings.Get(37001);
+      break;
     case DVD_SUBPICTURE_LANG_EXT_ChildrensDirectorsComments:
+      info.flags = StreamFlags::FLAG_CHILDRENS;
       info.name = g_localizeStrings.Get(37001);
       break;
     default:

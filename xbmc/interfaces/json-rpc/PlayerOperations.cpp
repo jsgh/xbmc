@@ -1813,6 +1813,14 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player, const std:
             result["index"] = index;
             result["name"] = info.name;
             result["language"] = info.language;
+            if (info.flags & StreamFlags::FLAG_HEARING_IMPAIRED)
+              result["hearingimpaired"] = true;
+            if (info.flags & StreamFlags::FLAG_LARGE)
+              result["large"] = true;
+            if (info.flags & StreamFlags::FLAG_CHILDRENS)
+              result["childrens"] = true;
+            if (info.flags & StreamFlags::FLAG_CLOSED_CAPTIONS)
+              result["closedcaptions"] = true;
           }
         }
         else
@@ -1843,6 +1851,14 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player, const std:
             subtitle["index"] = index;
             subtitle["name"] = info.name;
             subtitle["language"] = info.language;
+            if (info.flags & StreamFlags::FLAG_HEARING_IMPAIRED)
+              subtitle["hearingimpaired"] = true;
+            if (info.flags & StreamFlags::FLAG_LARGE)
+              subtitle["large"] = true;
+            if (info.flags & StreamFlags::FLAG_CHILDRENS)
+              subtitle["childrens"] = true;
+            if (info.flags & StreamFlags::FLAG_CLOSED_CAPTIONS)
+              subtitle["closedcaptions"] = true;
 
             result.append(subtitle);
           }
