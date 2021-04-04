@@ -101,8 +101,8 @@ if(CORE_PLATFORM_NAME_LC STREQUAL rbpi)
                       Sinks/AESinkPi.h)
 endif()
 
-  list(APPEND SOURCES Sinks/AESinkPi.cpp)
-  list(APPEND HEADERS Sinks/AESinkPi.h)
+#  list(APPEND SOURCES Sinks/AESinkPi.cpp)
+#  list(APPEND HEADERS Sinks/AESinkPi.h)
 
 if(CORE_SYSTEM_NAME STREQUAL osx)
   list(APPEND SOURCES Sinks/AESinkDARWINOSX.cpp
